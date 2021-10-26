@@ -1,10 +1,14 @@
 from selenium import webdriver
 import time
 
+fireFoxOptions = webdriver.FirefoxOptions()
+fireFoxOptions.set_headless()
+
 class Timetable:
     def __init__(self, busNumber):
         self.bus = busNumber
-        self.driver = webdriver.Firefox()
+
+        self.driver = webdriver.Firefox(firefox_options=fireFoxOptions)
         self.busStops = self.getBusStops(self.bus)
 
     def getBusStops(self, bus):
@@ -33,9 +37,9 @@ class Timetable:
     def cloudFlareCheck(self, url):
         while "Just a moment" in self.driver.title:
             self.driver.close()
-            self.driver = webdriver.Firefox()
+            self.driver = webdriver.Firefox(firefox_options=fireFoxOptions)
             self.driver.get(url)
-            time.sleep(10)
+            time.sleep(15)
         return
 
     def getBusStop(self, busStopName):
@@ -48,7 +52,10 @@ class Timetable:
 
 
     def getBusStopTimes(self, busStopName):
+        busTimes = []
         busStop = self.getBusStop(busStopName)
+
+        print(busStop["link"])
 
         self.driver.get(busStop["link"])
 
@@ -61,8 +68,16 @@ class Timetable:
             print("no need to update")
             pass
 
-        
+        buses = self.driver.find_elements_by_class_name("single-visit__name")
+        destinations = self.driver.find_elements_by_class_name("single-visit__description")
+        times = self.driver.find_elements_by_class_name("single-visit__time--expected")
 
+        print(len(buses))
+        print(len(destinations))
+        print(len(times))
 
+        for i in range(0,len(times)):
+            print(f"{buses[i].text} : {times[i].text}")
+            busTimes.append({"bus" : buses[i].text, "destination" : destinations[i].text, "time" : times[i].text})
 
-        return {}
+        return busTimes
